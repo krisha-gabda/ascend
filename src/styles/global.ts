@@ -15,6 +15,7 @@ export const globalStyles = StyleSheet.create({
         backgroundColor: colors.background,
         padding: 20,
         paddingHorizontal: 10,
+        height: 100,
         verticalAlign: 'middle',
     },
 
@@ -53,5 +54,20 @@ export const globalStyles = StyleSheet.create({
         color: colors.text,
         fontWeight: 'bold',
         textAlign: 'center',
+    },
+
+    input: {
+        borderColor: colors.border,
+        borderRadius: 8,
+        borderWidth: 2,
+        marginHorizontal: 12,
+        padding: 4,
+    },
+
+    link: {
+        fontSize: 12,
+        color: '#007BFF',
+        padding: 12,
+        textAlign: 'right',
     }
 })
