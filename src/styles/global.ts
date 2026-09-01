@@ -17,6 +17,7 @@ export const globalStyles = StyleSheet.create({
         paddingHorizontal: 10,
         height: 100,
         verticalAlign: 'middle',
+        paddingTop: 40,
     },
 
     mainTitle: {
