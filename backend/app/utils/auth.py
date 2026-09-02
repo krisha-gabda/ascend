@@ -21,3 +21,7 @@ def create_jwt_token(user_id: str) -> str:
         settings.JWT_SECRET_KEY,
         algorithm=settings.JWT_ALGORITHM
     )
+
+
+def verify_password(plain: str, hashed: str):
+    return pwd_context.verify(plain[:72], hashed)
