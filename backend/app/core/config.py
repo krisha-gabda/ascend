@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     # JWT Auth
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = 'HS256'
+    JWT_EXPIRY_MINUTES: int = 60
 
     # CORS
     ALLOWED_ORIGINS: list[str] = [

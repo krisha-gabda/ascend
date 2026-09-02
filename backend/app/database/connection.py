@@ -1,5 +1,5 @@
 from supabase import create_client, Client
-from app.core.config import get_settings
+from core.config import get_settings
 from passlib.context import CryptContext
 
 settings = get_settings()
