@@ -7,8 +7,11 @@ export default function Index() {
     <View style={globalStyles.container}>
         <Text style={globalStyles.mainTitle}>ASCEND</Text>
         <Text style={globalStyles.text}>Turn your everyday tasks into progress</Text>
-        <Pressable style={globalStyles.btn} onPress={() => router.push('/(tabs)/home')}>
-          <Text style={globalStyles.btnText}>Get Started</Text>
+        <Pressable style={globalStyles.btn} onPress={() => router.push('/login' as any)}>
+          <Text style={globalStyles.btnText}>Login</Text>
+        </Pressable>
+        <Pressable style={globalStyles.btn} onPress={() => router.push('/signup' as any)}>
+          <Text style={globalStyles.btnText}>Sign Up</Text>
         </Pressable>
     </View>
   );
