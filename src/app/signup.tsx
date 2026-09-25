@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState } from 'react';
+import { Alert, Button, Text, TextInput, View } from 'react-native';
 
 // Android emulator typically accesses localhost via 10.0.2.2.
 // If using an iOS emulator or physical device, change this to your computer's local IP address or localhost.
-const API_URL = (process.env as any).EXPO_PUBLIC_API_URL || 'http://10.0.2.2:8000';
+const API_URL = (process.env as any).EXPO_PUBLIC_API_URL || 'http://192.168.1.12:8000';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -33,6 +34,8 @@ export default function SignUp() {
         Alert.alert('Sign Up Failed', errorMessage || 'Something went wrong');
         return;
       }
+
+      await AsyncStorage.setItem('access_token', data.access_token);
 
       // Successful registration
       Alert.alert('Success', 'Account created successfully!');

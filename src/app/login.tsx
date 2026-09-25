@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState } from 'react';
 import { Alert, Button, Text, TextInput, View } from 'react-native';
 
-const API_URL = (process.env as any).EXPO_PUBLIC_API_URL;
+const API_URL = (process.env as any).EXPO_PUBLIC_API_URL || 'http://192.168.1.12:8000';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -29,6 +30,8 @@ export default function Login() {
         Alert.alert('Login Failed', data.detail || 'Invalid credentials');
         return;
       }
+
+      await AsyncStorage.setItem('access_token', data.access_token);
 
       // Successful login
       Alert.alert('Success', 'Logged in successfully!');

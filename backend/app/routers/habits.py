@@ -59,7 +59,7 @@ def get_habits(current_user = Depends(get_current_user)):
     return result
 
 
-@router.post('add_habit_logs')
+@router.post('/add_habit_logs')
 def add_habit_log(habit_id: str, current_user = Depends(get_current_user)):
     response = supabase.table('habits').select('*').eq('id', habit_id).eq('user_id', current_user['id']).execute()
     habit = response.data[0]
