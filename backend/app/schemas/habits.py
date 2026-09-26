@@ -10,7 +10,7 @@ class FrequencyTypesEnum(Enum):
 
 class HabitCreate(BaseModel):
     name: str
-    description: str
+    description: str | None = None
     frequency_type: FrequencyTypesEnum
     frequency_days: list[str] | None = None
 
@@ -19,7 +19,7 @@ class HabitResponse(BaseModel):
     id: str
     user_id: str
     name: str
-    description: str
+    description: str | None = None
     frequency_type: FrequencyTypesEnum
     frequency_days: list[str] | None = None
     current_streak: int

@@ -2,7 +2,7 @@ import { colors } from "@/src/styles/global";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 const API_URL = (process.env as any).EXPO_PUBLIC_API_URL || "http://192.168.1.12:8000";
 
@@ -22,6 +22,7 @@ export default function TasksScreen() {
     const [saving, setSaving] = useState(false);
     const [completingTaskIds, setCompletingTaskIds] = useState<Set<string>>(new Set());
     const [error, setError] = useState("");
+    const [addModalVisible, setAddModalVisible] = useState(false);
 
     const loadTasks = useCallback(async () => {
         setLoading(true);
@@ -87,6 +88,7 @@ export default function TasksScreen() {
             setTasks((currentTasks) => [data as Task, ...currentTasks]);
             setName("");
             setDescription("");
+            setAddModalVisible(false);
         } catch (createError) {
             setError(createError instanceof Error ? createError.message : "Unable to create task.");
         } finally {
@@ -129,6 +131,7 @@ export default function TasksScreen() {
     };
 
     return (
+        <>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             <View style={styles.header}>
                 <Text style={styles.title}>Tasks</Text>
@@ -178,38 +181,72 @@ export default function TasksScreen() {
                 })}
             </View>
 
-            <View style={styles.addSection}>
-                <Text style={styles.sectionTitle}>Add a task</Text>
-                <TextInput
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Task name"
-                    accessibilityLabel="Task name"
-                    placeholderTextColor={colors.textSecondary}
-                    style={styles.input}
-                />
-                <TextInput
-                    value={description}
-                    onChangeText={setDescription}
-                    placeholder="Description (optional)"
-                    accessibilityLabel="Task description"
-                    placeholderTextColor={colors.textSecondary}
-                    multiline
-                    style={[styles.input, styles.descriptionInput]}
-                />
-                <Pressable
-                    style={[styles.addButton, (saving || !name.trim()) && styles.addButtonDisabled]}
-                    onPress={() => void createTask()}
-                    disabled={saving || !name.trim()}
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: saving || !name.trim() }}
-                >
-                    <Ionicons name="add" size={19} color={colors.card} />
-                    <Text style={styles.addButtonText}>{saving ? "Adding..." : "Add task"}</Text>
-                </Pressable>
-            </View>
-            {error ? <Text accessibilityRole="alert">{error}</Text> : null}
+            <Pressable
+                style={styles.addButton}
+                onPress={() => {
+                    setError("");
+                    setAddModalVisible(true);
+                }}
+                accessibilityRole="button"
+            >
+                <Ionicons name="add" size={19} color={colors.card} />
+                <Text style={styles.addButtonText}>Add task</Text>
+            </Pressable>
+            {error && !addModalVisible ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
         </ScrollView>
+
+        <Modal
+            visible={addModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setAddModalVisible(false)}
+        >
+            <View style={styles.modalBackdrop}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Add a task</Text>
+                        <Pressable
+                            onPress={() => setAddModalVisible(false)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Close add task dialog"
+                            hitSlop={8}
+                        >
+                            <Ionicons name="close" size={22} color={colors.textSecondary} />
+                        </Pressable>
+                    </View>
+                    <TextInput
+                        value={name}
+                        onChangeText={setName}
+                        placeholder="Task name"
+                        accessibilityLabel="Task name"
+                        placeholderTextColor={colors.textSecondary}
+                        style={styles.input}
+                        autoFocus
+                    />
+                    <TextInput
+                        value={description}
+                        onChangeText={setDescription}
+                        placeholder="Description (optional)"
+                        accessibilityLabel="Task description"
+                        placeholderTextColor={colors.textSecondary}
+                        multiline
+                        style={[styles.input, styles.descriptionInput]}
+                    />
+                    {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
+                    <Pressable
+                        style={[styles.addButton, (saving || !name.trim()) && styles.addButtonDisabled]}
+                        onPress={() => void createTask()}
+                        disabled={saving || !name.trim()}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: saving || !name.trim() }}
+                    >
+                        <Ionicons name="add" size={19} color={colors.card} />
+                        <Text style={styles.addButtonText}>{saving ? "Adding..." : "Create task"}</Text>
+                    </Pressable>
+                </View>
+            </View>
+        </Modal>
+        </>
     );
 }
 
@@ -299,9 +336,6 @@ const styles = StyleSheet.create({
         color: colors.textSecondary,
         fontSize: 13,
     },
-    addSection: {
-        gap: 10,
-    },
     input: {
         color: colors.text,
         fontSize: 15,
@@ -331,5 +365,34 @@ const styles = StyleSheet.create({
         color: colors.card,
         fontSize: 14,
         fontWeight: "600",
+    },
+    modalBackdrop: {
+        flex: 1,
+        justifyContent: "center",
+        padding: 24,
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+    },
+    modalContent: {
+        gap: 14,
+        width: "100%",
+        maxWidth: 420,
+        alignSelf: "center",
+        padding: 20,
+        backgroundColor: colors.card,
+        borderRadius: 8,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    modalTitle: {
+        color: colors.text,
+        fontSize: 18,
+        fontWeight: "600",
+    },
+    error: {
+        color: "#B42318",
+        fontSize: 13,
     },
 });

@@ -2,7 +2,7 @@ import { colors } from "@/src/styles/global";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 const API_URL = (process.env as any).EXPO_PUBLIC_API_URL || "http://192.168.1.12:8000";
 const frequencies = ["daily", "weekly", "monthly", "specific_days"] as const;
@@ -13,7 +13,7 @@ type FrequencyType = (typeof frequencies)[number];
 type Habit = {
     id: string;
     name: string;
-    description: string;
+    description: string | null;
     frequency_type: FrequencyType;
     frequency_days: string[] | null;
     current_streak: number;
@@ -33,6 +33,7 @@ export default function Habits() {
     const [recordingIds, setRecordingIds] = useState<Set<string>>(new Set());
     const [recordedTodayIds, setRecordedTodayIds] = useState<Set<string>>(new Set());
     const [error, setError] = useState("");
+    const [addModalVisible, setAddModalVisible] = useState(false);
 
     const loadHabits = useCallback(async () => {
         setLoading(true);
@@ -93,7 +94,7 @@ export default function Habits() {
                 },
                 body: JSON.stringify({
                     name: habitName,
-                    description: description.trim(),
+                    description: description.trim() || null,
                     frequency_type: frequency,
                     frequency_days: frequency === "specific_days" ? selectedDays : null,
                 }),
@@ -109,6 +110,7 @@ export default function Habits() {
             setDescription("");
             setFrequency("daily");
             setSelectedDays([]);
+            setAddModalVisible(false);
         } catch (createError) {
             setError(createError instanceof Error ? createError.message : "Unable to add habit.");
         } finally {
@@ -166,6 +168,7 @@ export default function Habits() {
     };
 
     return (
+        <>
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             <View style={styles.header}>
                 <Text style={styles.title}>Habits</Text>
@@ -186,7 +189,7 @@ export default function Habits() {
                     </Pressable>
                 </View>
                 {loading ? <ActivityIndicator color={colors.primary} style={styles.loading} /> : habits.filter((habit) => habit.is_active).length === 0 ? (
-                    <Text style={styles.empty}>No habits yet. Add one below.</Text>
+                    <Text style={styles.empty}>No active habits yet.</Text>
                 ) : habits.filter((habit) => habit.is_active).map((habit) => {
                     const recording = recordingIds.has(habit.id);
                     const recorded = recordedTodayIds.has(habit.id);
@@ -221,75 +224,111 @@ export default function Habits() {
                 })}
             </View>
 
-            <View style={styles.addSection}>
-                <Text style={styles.sectionTitle}>Add a habit</Text>
-                <TextInput
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Habit name"
-                    accessibilityLabel="Habit name"
-                    placeholderTextColor={colors.textSecondary}
-                    style={styles.input}
-                />
-                <TextInput
-                    value={description}
-                    onChangeText={setDescription}
-                    placeholder="Description (optional)"
-                    accessibilityLabel="Habit description"
-                    placeholderTextColor={colors.textSecondary}
-                    style={styles.input}
-                />
-                <Text style={styles.fieldLabel}>Frequency</Text>
-                <View style={styles.options}>
-                    {frequencies.map((option) => {
-                        const selected = frequency === option;
-                        return (
-                            <Pressable
-                                key={option}
-                                style={[styles.option, selected && styles.optionSelected]}
-                                onPress={() => setFrequency(option)}
-                                accessibilityRole="radio"
-                                accessibilityState={{ selected }}
-                            >
-                                <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                                    {option.replace("_", " ")}
-                                </Text>
-                            </Pressable>
-                        );
-                    })}
-                </View>
-                {frequency === "specific_days" ? (
-                    <View style={styles.options}>
-                        {weekdays.map((day) => {
-                            const selected = selectedDays.includes(day);
-                            return (
-                                <Pressable
-                                    key={day}
-                                    style={[styles.dayOption, selected && styles.optionSelected]}
-                                    onPress={() => toggleDay(day)}
-                                    accessibilityRole="checkbox"
-                                    accessibilityState={{ checked: selected }}
-                                    accessibilityLabel={day}
-                                >
-                                    <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{day.slice(0, 3)}</Text>
-                                </Pressable>
-                            );
-                        })}
-                    </View>
-                ) : null}
-                <Pressable
-                    style={[styles.addButton, (saving || !name.trim()) && styles.addButtonDisabled]}
-                    onPress={() => void createHabit()}
-                    disabled={saving || !name.trim()}
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: saving || !name.trim() }}
-                >
-                    <Ionicons name="add" size={19} color={colors.card} />
-                    <Text style={styles.addButtonText}>{saving ? "Adding..." : "Add habit"}</Text>
-                </Pressable>
-            </View>
-            {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
+            <Pressable
+                style={styles.addButton}
+                onPress={() => {
+                    setError("");
+                    setAddModalVisible(true);
+                }}
+                accessibilityRole="button"
+            >
+                <Ionicons name="add" size={19} color={colors.card} />
+                <Text style={styles.addButtonText}>Add habit</Text>
+            </Pressable>
+            {error && !addModalVisible ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
         </ScrollView>
+
+        <Modal
+            visible={addModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setAddModalVisible(false)}
+        >
+            <View style={styles.modalBackdrop}>
+                <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Add a habit</Text>
+                        <Pressable
+                            onPress={() => setAddModalVisible(false)}
+                            accessibilityRole="button"
+                            accessibilityLabel="Close add habit dialog"
+                            hitSlop={8}
+                        >
+                            <Ionicons name="close" size={22} color={colors.textSecondary} />
+                        </Pressable>
+                    </View>
+                    <ScrollView style={styles.modalForm} keyboardShouldPersistTaps="handled">
+                        <TextInput
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="Habit name"
+                            accessibilityLabel="Habit name"
+                            placeholderTextColor={colors.textSecondary}
+                            style={styles.input}
+                            autoFocus
+                        />
+                        <TextInput
+                            value={description}
+                            onChangeText={setDescription}
+                            placeholder="Description (optional)"
+                            accessibilityLabel="Habit description"
+                            placeholderTextColor={colors.textSecondary}
+                            style={styles.input}
+                        />
+                        <Text style={styles.fieldLabel}>Frequency</Text>
+                        <View style={styles.options}>
+                            {frequencies.map((option) => {
+                                const selected = frequency === option;
+                                return (
+                                    <Pressable
+                                        key={option}
+                                        style={[styles.option, selected && styles.optionSelected]}
+                                        onPress={() => setFrequency(option)}
+                                        accessibilityRole="radio"
+                                        accessibilityState={{ selected }}
+                                    >
+                                        <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
+                                            {option.replace("_", " ")}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                        {frequency === "specific_days" ? (
+                            <View style={styles.options}>
+                                {weekdays.map((day) => {
+                                    const selected = selectedDays.includes(day);
+                                    return (
+                                        <Pressable
+                                            key={day}
+                                            style={[styles.dayOption, selected && styles.optionSelected]}
+                                            onPress={() => toggleDay(day)}
+                                            accessibilityRole="checkbox"
+                                            accessibilityState={{ checked: selected }}
+                                            accessibilityLabel={day}
+                                        >
+                                            <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{day.slice(0, 3)}</Text>
+                                        </Pressable>
+                                    );
+                                })}
+                            </View>
+                        ) : null}
+                        {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
+                    </ScrollView>
+                    <Pressable
+                        style={[styles.addButton, (saving || !name.trim()) && styles.addButtonDisabled]}
+                        onPress={() => void createHabit()}
+                        disabled={saving || !name.trim()}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: saving || !name.trim() }}
+                    >
+                        <Ionicons name="add" size={19} color={colors.card} />
+                        <Text style={styles.addButtonText}>{saving ? "Adding..." : "Create habit"}</Text>
+                    </Pressable>
+                </View>
+            </View>
+        </Modal>
+        </>
     );
 }
 
@@ -338,7 +377,29 @@ const styles = StyleSheet.create({
     recordedButton: { borderColor: colors.border },
     recordText: { color: colors.primary, fontSize: 13, fontWeight: "600" },
     recordedText: { color: colors.textSecondary },
-    addSection: { gap: 10 },
+    modalBackdrop: {
+        flex: 1,
+        justifyContent: "center",
+        padding: 24,
+        backgroundColor: "rgba(0, 0, 0, 0.35)",
+    },
+    modalContent: {
+        gap: 14,
+        width: "100%",
+        maxWidth: 420,
+        maxHeight: "85%",
+        alignSelf: "center",
+        padding: 20,
+        backgroundColor: colors.card,
+        borderRadius: 8,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    modalTitle: { color: colors.text, fontSize: 18, fontWeight: "600" },
+    modalForm: { flexGrow: 0 },
     input: {
         color: colors.text,
         fontSize: 15,
