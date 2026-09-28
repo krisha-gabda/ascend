@@ -18,6 +18,7 @@ type Habit = {
     frequency_days: string[] | null;
     current_streak: number;
     longest_streak: number;
+    completed_today: boolean;
     is_active: boolean;
     created_at: string;
 };
@@ -31,7 +32,6 @@ export default function Habits() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [recordingIds, setRecordingIds] = useState<Set<string>>(new Set());
-    const [recordedTodayIds, setRecordedTodayIds] = useState<Set<string>>(new Set());
     const [error, setError] = useState("");
     const [addModalVisible, setAddModalVisible] = useState(false);
 
@@ -119,7 +119,7 @@ export default function Habits() {
     };
 
     const recordHabit = async (habit: Habit) => {
-        if (recordedTodayIds.has(habit.id)) return;
+        if (habit.completed_today || recordingIds.has(habit.id)) return;
 
         setError("");
         setRecordingIds((currentIds) => new Set(currentIds).add(habit.id));
@@ -137,19 +137,23 @@ export default function Habits() {
             const data = await response.json();
 
             if (!response.ok) {
+                if (response.status === 409) {
+                    await loadHabits();
+                    setError("This habit has already been recorded today.");
+                    return;
+                }
                 throw new Error(typeof data.detail === "string" ? data.detail : "Unable to record habit.");
             }
 
             setHabits((currentHabits) => currentHabits.map((currentHabit) => {
                 if (currentHabit.id !== habit.id) return currentHabit;
-                const currentStreak = currentHabit.current_streak + 1;
                 return {
                     ...currentHabit,
-                    current_streak: currentStreak,
-                    longest_streak: Math.max(currentHabit.longest_streak, currentStreak),
+                    current_streak: data.current_streak,
+                    longest_streak: data.longest_streak,
+                    completed_today: true,
                 };
             }));
-            setRecordedTodayIds((currentIds) => new Set(currentIds).add(habit.id));
         } catch (recordError) {
             setError(recordError instanceof Error ? recordError.message : "Unable to record habit.");
         } finally {
@@ -192,7 +196,7 @@ export default function Habits() {
                     <Text style={styles.empty}>No active habits yet.</Text>
                 ) : habits.filter((habit) => habit.is_active).map((habit) => {
                     const recording = recordingIds.has(habit.id);
-                    const recorded = recordedTodayIds.has(habit.id);
+                    const recorded = habit.completed_today;
                     const schedule = habit.frequency_type === "specific_days" && habit.frequency_days?.length
                         ? habit.frequency_days.join(", ")
                         : habit.frequency_type.replace("_", " ");
@@ -202,7 +206,12 @@ export default function Habits() {
                             <View style={styles.habitCopy}>
                                 <Text style={styles.habitName}>{habit.name}</Text>
                                 {habit.description ? <Text style={styles.description}>{habit.description}</Text> : null}
-                                <Text style={styles.meta}>{schedule} · {habit.current_streak} day streak</Text>
+                                <Text style={styles.meta}>{schedule}</Text>
+                                <Text style={styles.streaks}>
+                                    Current: {habit.current_streak} day{habit.current_streak === 1 ? "" : "s"}
+                                    {"  ·  "}
+                                    Longest: {habit.longest_streak} day{habit.longest_streak === 1 ? "" : "s"}
+                                </Text>
                             </View>
                             <Pressable
                                 style={[styles.recordButton, recorded && styles.recordedButton]}
@@ -362,6 +371,7 @@ const styles = StyleSheet.create({
     habitName: { color: colors.text, fontSize: 15, fontWeight: "500" },
     description: { color: colors.textSecondary, fontSize: 13 },
     meta: { color: colors.textSecondary, fontSize: 12, textTransform: "capitalize" },
+    streaks: { color: colors.text, fontSize: 12, marginTop: 2 },
     recordButton: {
         minWidth: 82,
         flexDirection: "row",
@@ -441,5 +451,5 @@ const styles = StyleSheet.create({
     },
     addButtonDisabled: { opacity: 0.55 },
     addButtonText: { color: colors.card, fontSize: 14, fontWeight: "600" },
-    error: { color: "#B42318", marginTop: 12 },
+    error: { color: "#FF6B6B", marginTop: 12 },
 });

@@ -1,7 +1,8 @@
-import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Button, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { colors, globalStyles } from '../styles/global';
 
 const API_URL = (process.env as any).EXPO_PUBLIC_API_URL || 'http://192.168.1.12:8000';
 
@@ -45,30 +46,38 @@ export default function Login() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-      <Text>Email:</Text>
+    <View style={globalStyles.container}>
+      <Text style={globalStyles.mainTitle}>ASCEND</Text>
+      <Text style={globalStyles.subtitle}>Welcome back!</Text>
+
+      <Text style={globalStyles.inputLabel}>Email</Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
         placeholder="Enter your email"
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="email-address"
-        style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
+        style={globalStyles.input}
       />
 
-      <Text>Password:</Text>
+      <Text style={globalStyles.inputLabel}>Password</Text>
       <TextInput
         value={password}
         onChangeText={setPassword}
         placeholder="Enter your password"
+        placeholderTextColor={colors.textSecondary}
         secureTextEntry
-        style={{ borderWidth: 1, marginBottom: 20, padding: 5 }}
+        style={globalStyles.input}
       />
 
-      <Button title="Login" onPress={handleLogin} />
-
-      <View style={{ marginTop: 20 }}>
-        <Button title="Go to Sign Up" onPress={() => router.replace('/signup' as any)} color="gray" />
+      <View style={{ marginTop: 24 }}>
+        <Pressable style={globalStyles.btn} onPress={handleLogin}>
+          <Text style={globalStyles.btnText}>Login</Text>
+        </Pressable>
+        <Pressable style={globalStyles.btnSecondary} onPress={() => router.replace('/signup' as any)}>
+          <Text style={globalStyles.btnSecondaryText}>Go to Sign Up</Text>
+        </Pressable>
       </View>
     </View>
   );

@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     error: {
-        color: "#B42318",
+        color: "#FF6B6B",
         fontSize: 13,
     },
 });

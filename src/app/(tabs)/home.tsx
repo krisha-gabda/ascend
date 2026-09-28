@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     rowName: { color: colors.text, fontSize: 14, flex: 1 },
     streak: { color: colors.textSecondary, fontSize: 12 },
     moreText: { color: colors.textSecondary, fontSize: 12, paddingTop: 9 },
-    error: { color: "#B42318", marginTop: 12 },
+    error: { color: "#FF6B6B", marginTop: 12 },
     dismissLayer: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
     addMenu: {
         position: "absolute",

@@ -24,6 +24,7 @@ class HabitResponse(BaseModel):
     frequency_days: list[str] | None = None
     current_streak: int
     longest_streak: int
+    completed_today: bool = False
     is_active: bool
     created_at: str
 
@@ -38,3 +39,5 @@ class HabitLogResponse(BaseModel):
     habit_id: str
     date: str
     status: str
+    current_streak: int
+    longest_streak: int

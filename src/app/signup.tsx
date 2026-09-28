@@ -1,7 +1,8 @@
-import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Button, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { colors, globalStyles } from '../styles/global';
 
 // Android emulator typically accesses localhost via 10.0.2.2.
 // If using an iOS emulator or physical device, change this to your computer's local IP address or localhost.
@@ -39,7 +40,7 @@ export default function SignUp() {
 
       // Successful registration
       Alert.alert('Success', 'Account created successfully!');
-      
+
       // Navigate to home page
       router.replace('/(tabs)/home' as any);
     } catch (error) {
@@ -49,30 +50,38 @@ export default function SignUp() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-      <Text>Email:</Text>
+    <View style={globalStyles.container}>
+      <Text style={globalStyles.mainTitle}>ASCEND</Text>
+      <Text style={globalStyles.subtitle}>Create your account</Text>
+
+      <Text style={globalStyles.inputLabel}>Email</Text>
       <TextInput
         value={email}
         onChangeText={setEmail}
         placeholder="Enter your email"
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="email-address"
-        style={{ borderWidth: 1, marginBottom: 10, padding: 5 }}
+        style={globalStyles.input}
       />
 
-      <Text>Password (min 8 chars):</Text>
+      <Text style={globalStyles.inputLabel}>Password (min 8 chars)</Text>
       <TextInput
         value={password}
         onChangeText={setPassword}
         placeholder="Enter your password"
+        placeholderTextColor={colors.textSecondary}
         secureTextEntry
-        style={{ borderWidth: 1, marginBottom: 20, padding: 5 }}
+        style={globalStyles.input}
       />
 
-      <Button title="Sign Up" onPress={handleSignUp} />
-      
-      <View style={{ marginTop: 20 }}>
-        <Button title="Go to Login" onPress={() => router.replace('/login' as any)} color="gray" />
+      <View style={{ marginTop: 24 }}>
+        <Pressable style={globalStyles.btn} onPress={handleSignUp}>
+          <Text style={globalStyles.btnText}>Sign Up</Text>
+        </Pressable>
+        <Pressable style={globalStyles.btnSecondary} onPress={() => router.replace('/login' as any)}>
+          <Text style={globalStyles.btnSecondaryText}>Go to Login</Text>
+        </Pressable>
       </View>
     </View>
   );
